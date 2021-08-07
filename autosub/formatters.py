@@ -1,14 +1,8 @@
 """
-Defines subtitle formatters used by autosub.
+Defines subtitle formatters used by autosub-baidu.
 """
-
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import json
-
 import pysrt
-import six
 
 
 def srt_formatter(subtitles, padding_before=0, padding_after=0):
@@ -19,11 +13,11 @@ def srt_formatter(subtitles, padding_before=0, padding_after=0):
     for i, ((start, end), text) in enumerate(subtitles, start=1):
         item = pysrt.SubRipItem()
         item.index = i
-        item.text = six.text_type(text)
+        item.text = str(text)
         item.start.seconds = max(0, start - padding_before)
         item.end.seconds = end + padding_after
         sub_rip_file.append(item)
-    return '\n'.join(six.text_type(item) for item in sub_rip_file)
+    return '\n'.join(str(item) for item in sub_rip_file)
 
 
 def vtt_formatter(subtitles, padding_before=0, padding_after=0):
