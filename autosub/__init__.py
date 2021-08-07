@@ -50,10 +50,11 @@ def percentile(arr, percent):
     return low_value + high_value
 
 
-class FLACConverter(object): # pylint: disable=too-few-public-methods
+class WAVConverter(object):
     """
-    Class for converting a region of an input audio or video file into a FLAC audio file
+    Class for converting a region of an input audio or video file into a WAV audio file
     """
+
     def __init__(self, source_path, include_before=0.25, include_after=0.25):
         self.source_path = source_path
         self.include_before = include_before
@@ -64,7 +65,7 @@ class FLACConverter(object): # pylint: disable=too-few-public-methods
             start, end = region
             start = max(0, start - self.include_before)
             end += self.include_after
-            temp = tempfile.NamedTemporaryFile(suffix='.flac', delete=False)
+            temp = tempfile.NamedTemporaryFile(suffix='.wav', delete=False)
             command = ["ffmpeg", "-ss", str(start), "-t", str(end - start),
                        "-y", "-i", self.source_path,
                        "-loglevel", "error", temp.name]
@@ -196,7 +197,7 @@ def find_speech_regions(filename, frame_width=4096, min_region_size=0.5, max_reg
     return regions
 
 
-def generate_subtitles( # pylint: disable=too-many-locals,too-many-arguments
+def generate_subtitles(
         source_path,
         output=None,
         concurrency=DEFAULT_CONCURRENCY,
@@ -211,15 +212,14 @@ def generate_subtitles( # pylint: disable=too-many-locals,too-many-arguments
     regions = find_speech_regions(audio_filename)
 
     pool = multiprocessing.Pool(concurrency)
-    converter = FLACConverter(source_path=audio_filename)
+    converter = WAVConverter(source_path=audio_filename)
     recognizer = SpeechRecognizer(language=src_language, rate=audio_rate,
                                   api_key=GOOGLE_SPEECH_API_KEY)
 
     transcripts = []
     if regions:
         try:
-            widgets = ["Converting speech regions to FLAC files: ", Percentage(), ' ', Bar(), ' ',
-                       ETA()]
+            widgets = ["Converting speech regions to WAV files: ", Percentage(), ' ', Bar(), ' ', ETA()]
             pbar = ProgressBar(widgets=widgets, maxval=len(regions)).start()
             extracted_regions = []
             for i, extracted_region in enumerate(pool.imap(converter, regions)):
@@ -229,7 +229,6 @@ def generate_subtitles( # pylint: disable=too-many-locals,too-many-arguments
 
             widgets = ["Performing speech recognition: ", Percentage(), ' ', Bar(), ' ', ETA()]
             pbar = ProgressBar(widgets=widgets, maxval=len(regions)).start()
-
             for i, transcript in enumerate(pool.imap(recognizer, extracted_regions)):
                 transcripts.append(transcript)
                 pbar.update(i)
