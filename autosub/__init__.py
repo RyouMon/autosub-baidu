@@ -15,13 +15,7 @@ import subprocess
 import sys
 import tempfile
 import wave
-import json
-import requests
-
-try:
-    from json.decoder import JSONDecodeError
-except ImportError:
-    JSONDecodeError = ValueError
+from aip import AipSpeech
 
 from progressbar import ProgressBar, Percentage, Bar, ETA
 
@@ -31,7 +25,7 @@ from autosub.constants import (
 from autosub.formatters import FORMATTERS
 
 DEFAULT_SUBTITLE_FORMAT = 'srt'
-DEFAULT_CONCURRENCY = 10
+DEFAULT_CONCURRENCY = 1
 DEFAULT_SRC_LANGUAGE = 'en'
 DEFAULT_DST_LANGUAGE = 'en'
 
@@ -83,37 +77,33 @@ class WAVConverter(object):
 
 class SpeechRecognizer(object):
     """
-    Class for performing speech-to-text for an input FLAC file.
+    Class for performing speech-to-text for an input WAV file.
     """
 
-    def __init__(self, language="en", rate=44100, retries=3, api_key=GOOGLE_SPEECH_API_KEY):
-        self.language = language
-        self.rate = rate
+    _client = None
+
+    def __init__(self,  app_id, api_key, secret_key, dev_pid=1537, rate=16000, retries=3):
+        self.app_id = app_id
         self.api_key = api_key
-        self.retries = retries
+        self.secret_key = secret_key
+        self.rate = rate
+        self.dev_pid = dev_pid
+        self.retries = retries if retries >= 0 else 0
+
+    @property
+    def client(self):
+        if not self._client:
+            self._client = AipSpeech(self.app_id, self.api_key, self.secret_key)
+        return self._client
 
     def __call__(self, data):
         try:
             for _ in range(self.retries):
-                url = GOOGLE_SPEECH_API_URL.format(lang=self.language, key=self.api_key)
-                headers = {"Content-Type": "audio/x-flac; rate=%d" % self.rate}
-
-                try:
-                    resp = requests.post(url, data=data, headers=headers)
-                except requests.exceptions.ConnectionError:
+                response = self.client.asr(data, 'wav', self.rate, {'dev_pid': self.dev_pid})
+                if response['err_no']:
                     continue
-
-                for line in resp.content.decode('utf-8').split("\n"):
-                    try:
-                        line = json.loads(line)
-                        line = line['result'][0]['alternative'][0]['transcript']
-                        return line[:1].upper() + line[1:]
-                    except IndexError:
-                        # no result
-                        continue
-                    except JSONDecodeError:
-                        continue
-
+                return response['result'][0]
+            raise Exception('SpeechRecognizer: %s, err_code: %d' % (response['err_msg'], response['err_no']))
         except KeyboardInterrupt:
             return None
 
@@ -176,8 +166,10 @@ def find_speech_regions(filename, frame_width=4096, min_region_size=0.5, max_reg
 def generate_subtitles(source_path,
                        output=None,
                        concurrency=DEFAULT_CONCURRENCY,
-                       src_language=DEFAULT_SRC_LANGUAGE,
                        subtitle_file_format=DEFAULT_SUBTITLE_FORMAT,
+                       app_id=None,
+                       api_key=None,
+                       secret_key=None,
                        ):
     """
     Given an input audio/video file, generate subtitles in the specified language and format.
@@ -188,8 +180,7 @@ def generate_subtitles(source_path,
 
     pool = multiprocessing.Pool(concurrency)
     converter = WAVConverter(source_path=audio_filename)
-    recognizer = SpeechRecognizer(language=src_language, rate=audio_rate,
-                                  api_key=GOOGLE_SPEECH_API_KEY)
+    recognizer = SpeechRecognizer(app_id=app_id, api_key=api_key, secret_key=secret_key)
 
     transcripts = []
     if regions:
@@ -313,9 +304,6 @@ def main():
         subtitle_file_path = generate_subtitles(
             source_path=args.source_path,
             concurrency=args.concurrency,
-            src_language=args.src_language,
-            dst_language=args.dst_language,
-            api_key=args.api_key,
             subtitle_file_format=args.format,
             output=args.output,
         )
