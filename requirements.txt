@@ -1,0 +1,4 @@
+pysrt==1.1.2
+requests>=2.26.0
+progressbar==2.5
+baidu-aip==2.2.18.0
