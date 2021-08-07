@@ -19,15 +19,12 @@ from aip import AipSpeech
 
 from progressbar import ProgressBar, Percentage, Bar, ETA
 
-from autosub.constants import (
-    LANGUAGE_CODES, GOOGLE_SPEECH_API_KEY, GOOGLE_SPEECH_API_URL,
-)
+from autosub.constants import LANGUAGE_CODES
 from autosub.formatters import FORMATTERS
 
 DEFAULT_SUBTITLE_FORMAT = 'srt'
 DEFAULT_CONCURRENCY = 1
-DEFAULT_SRC_LANGUAGE = 'en'
-DEFAULT_DST_LANGUAGE = 'en'
+DEFAULT_LANGUAGE = '1537'
 
 
 def percentile(arr, percent):
@@ -82,7 +79,7 @@ class SpeechRecognizer(object):
 
     _client = None
 
-    def __init__(self,  app_id, api_key, secret_key, dev_pid=1537, rate=16000, retries=3):
+    def __init__(self,  app_id, api_key, secret_key, dev_pid='1537', rate=16000, retries=3):
         self.app_id = app_id
         self.api_key = api_key
         self.secret_key = secret_key
@@ -170,6 +167,7 @@ def generate_subtitles(source_path,
                        app_id=None,
                        api_key=None,
                        secret_key=None,
+                       dev_pid=DEFAULT_LANGUAGE,
                        ):
     """
     Given an input audio/video file, generate subtitles in the specified language and format.
@@ -180,7 +178,7 @@ def generate_subtitles(source_path,
 
     pool = multiprocessing.Pool(concurrency)
     converter = WAVConverter(source_path=audio_filename)
-    recognizer = SpeechRecognizer(app_id=app_id, api_key=api_key, secret_key=secret_key)
+    recognizer = SpeechRecognizer(app_id=app_id, api_key=api_key, secret_key=secret_key, dev_pid=dev_pid)
 
     transcripts = []
     if regions:
@@ -236,16 +234,9 @@ def validate(args):
         )
         return False
 
-    if args.src_language not in LANGUAGE_CODES.keys():
+    if args.lang not in LANGUAGE_CODES.keys():
         print(
             "Source language not supported. "
-            "Run with --list-languages to see all supported languages."
-        )
-        return False
-
-    if args.dst_language not in LANGUAGE_CODES.keys():
-        print(
-            "Destination language not supported. "
             "Run with --list-languages to see all supported languages."
         )
         return False
@@ -271,13 +262,14 @@ def main():
                         the same directory and name as the source path)")
     parser.add_argument('-F', '--format', help="Destination subtitle format",
                         default=DEFAULT_SUBTITLE_FORMAT)
-    parser.add_argument('-S', '--src-language', help="Language spoken in source file",
-                        default=DEFAULT_SRC_LANGUAGE)
-    parser.add_argument('-D', '--dst-language', help="Desired language for the subtitles",
-                        default=DEFAULT_DST_LANGUAGE)
+    parser.add_argument('-L', '--lang', help="Language spoken in source file",
+                        default=DEFAULT_LANGUAGE)
     parser.add_argument('-K', '--api-key',
-                        help="The Google Translate API key to be used. \
-                        (Required for subtitle translation)")
+                        help="The Baidu Cloud API key to be used.")
+    parser.add_argument('-S', '--secret-key',
+                        help="The Baidu Cloud Secret Key to be used.")
+    parser.add_argument('-A', '--app-id',
+                        help="The Baidu Cloud AppID to be used.")
     parser.add_argument('--list-formats', help="List all available subtitle formats",
                         action='store_true')
     parser.add_argument('--list-languages', help="List all available source/destination languages",
@@ -306,6 +298,10 @@ def main():
             concurrency=args.concurrency,
             subtitle_file_format=args.format,
             output=args.output,
+            api_key=args.api_key,
+            app_id=args.app_id,
+            secret_key=args.secret_key,
+            dev_pid=args.lang,
         )
         print("Subtitles file created at {}".format(subtitle_file_path))
     except KeyboardInterrupt:
