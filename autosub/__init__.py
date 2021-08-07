@@ -116,29 +116,6 @@ class SpeechRecognizer(object): # pylint: disable=too-few-public-methods
             return None
 
 
-def which(program):
-    """
-    Return the path for a given executable.
-    """
-    def is_exe(file_path):
-        """
-        Checks whether a file is executable.
-        """
-        return os.path.isfile(file_path) and os.access(file_path, os.X_OK)
-
-    fpath, _ = os.path.split(program)
-    if fpath:
-        if is_exe(program):
-            return program
-    else:
-        for path in os.environ["PATH"].split(os.pathsep):
-            path = path.strip('"')
-            exe_file = os.path.join(path, program)
-            if is_exe(exe_file):
-                return exe_file
-    return None
-
-
 def extract_audio(filename, channels=1, rate=16000):
     """
     Extract audio from an input file to a temporary WAV file.
@@ -147,9 +124,6 @@ def extract_audio(filename, channels=1, rate=16000):
     if not os.path.isfile(filename):
         print("The given file does not exist: {}".format(filename))
         raise Exception("Invalid filepath: {}".format(filename))
-    if not which("ffmpeg"):
-        print("ffmpeg: Executable not found on machine.")
-        raise Exception("Dependency not found: ffmpeg")
     command = ["ffmpeg", "-y", "-i", filename,
                "-ac", str(channels), "-ar", str(rate),
                "-loglevel", "error", temp.name]
