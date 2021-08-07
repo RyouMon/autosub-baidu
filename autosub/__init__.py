@@ -17,6 +17,7 @@ import tempfile
 import wave
 import json
 import requests
+
 try:
     from json.decoder import JSONDecodeError
 except ImportError:
@@ -80,10 +81,11 @@ class WAVConverter(object):
             return None
 
 
-class SpeechRecognizer(object): # pylint: disable=too-few-public-methods
+class SpeechRecognizer(object):
     """
     Class for performing speech-to-text for an input FLAC file.
     """
+
     def __init__(self, language="en", rate=44100, retries=3, api_key=GOOGLE_SPEECH_API_KEY):
         self.language = language
         self.rate = rate
@@ -132,7 +134,7 @@ def extract_audio(filename, channels=1, rate=16000):
     return temp.name, rate
 
 
-def find_speech_regions(filename, frame_width=4096, min_region_size=0.5, max_region_size=6): # pylint: disable=too-many-locals
+def find_speech_regions(filename, frame_width=4096, min_region_size=0.5, max_region_size=6):
     """
     Perform voice activity detection on a given audio file.
     """
@@ -142,7 +144,7 @@ def find_speech_regions(filename, frame_width=4096, min_region_size=0.5, max_reg
     n_channels = reader.getnchannels()
     chunk_duration = float(frame_width) / rate
 
-    n_chunks = int(math.ceil(reader.getnframes()*1.0 / frame_width))
+    n_chunks = int(math.ceil(reader.getnframes() * 1.0 / frame_width))
     energies = []
 
     for _ in range(n_chunks):
@@ -171,13 +173,12 @@ def find_speech_regions(filename, frame_width=4096, min_region_size=0.5, max_reg
     return regions
 
 
-def generate_subtitles(
-        source_path,
-        output=None,
-        concurrency=DEFAULT_CONCURRENCY,
-        src_language=DEFAULT_SRC_LANGUAGE,
-        subtitle_file_format=DEFAULT_SUBTITLE_FORMAT,
-    ):
+def generate_subtitles(source_path,
+                       output=None,
+                       concurrency=DEFAULT_CONCURRENCY,
+                       src_language=DEFAULT_SRC_LANGUAGE,
+                       subtitle_file_format=DEFAULT_SUBTITLE_FORMAT,
+                       ):
     """
     Given an input audio/video file, generate subtitles in the specified language and format.
     """
