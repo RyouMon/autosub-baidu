@@ -22,7 +22,6 @@ try:
 except ImportError:
     JSONDecodeError = ValueError
 
-from googleapiclient.discovery import build
 from progressbar import ProgressBar, Percentage, Bar, ETA
 
 from autosub.constants import (
@@ -116,39 +115,6 @@ class SpeechRecognizer(object): # pylint: disable=too-few-public-methods
             return None
 
 
-class Translator(object): # pylint: disable=too-few-public-methods
-    """
-    Class for translating a sentence from a one language to another.
-    """
-    def __init__(self, language, api_key, src, dst):
-        self.language = language
-        self.api_key = api_key
-        self.service = build('translate', 'v2',
-                             developerKey=self.api_key)
-        self.src = src
-        self.dst = dst
-
-    def __call__(self, sentence):
-        try:
-            if not sentence:
-                return None
-
-            result = self.service.translations().list( # pylint: disable=no-member
-                source=self.src,
-                target=self.dst,
-                q=[sentence]
-            ).execute()
-
-            if 'translations' in result and result['translations'] and \
-                'translatedText' in result['translations'][0]:
-                return result['translations'][0]['translatedText']
-
-            return None
-
-        except KeyboardInterrupt:
-            return None
-
-
 def which(program):
     """
     Return the path for a given executable.
@@ -235,9 +201,7 @@ def generate_subtitles( # pylint: disable=too-many-locals,too-many-arguments
         output=None,
         concurrency=DEFAULT_CONCURRENCY,
         src_language=DEFAULT_SRC_LANGUAGE,
-        dst_language=DEFAULT_DST_LANGUAGE,
         subtitle_file_format=DEFAULT_SUBTITLE_FORMAT,
-        api_key=None,
     ):
     """
     Given an input audio/video file, generate subtitles in the specified language and format.
@@ -270,28 +234,6 @@ def generate_subtitles( # pylint: disable=too-many-locals,too-many-arguments
                 transcripts.append(transcript)
                 pbar.update(i)
             pbar.finish()
-
-            if src_language.split("-")[0] != dst_language.split("-")[0]:
-                if api_key:
-                    google_translate_api_key = api_key
-                    translator = Translator(dst_language, google_translate_api_key,
-                                            dst=dst_language,
-                                            src=src_language)
-                    prompt = "Translating from {0} to {1}: ".format(src_language, dst_language)
-                    widgets = [prompt, Percentage(), ' ', Bar(), ' ', ETA()]
-                    pbar = ProgressBar(widgets=widgets, maxval=len(regions)).start()
-                    translated_transcripts = []
-                    for i, transcript in enumerate(pool.imap(translator, transcripts)):
-                        translated_transcripts.append(transcript)
-                        pbar.update(i)
-                    pbar.finish()
-                    transcripts = translated_transcripts
-                else:
-                    print(
-                        "Error: Subtitle translation requires specified Google Translate API key. "
-                        "See --help for further information."
-                    )
-                    return 1
 
         except KeyboardInterrupt:
             pbar.finish()
