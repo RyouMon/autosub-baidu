@@ -262,7 +262,7 @@ def main():
                         the same directory and name as the source path)")
     parser.add_argument('-F', '--format', help="Destination subtitle format",
                         default=DEFAULT_SUBTITLE_FORMAT)
-    parser.add_argument('-L', '--lang', help="Language spoken in source file",
+    parser.add_argument('-L', '--lang', help="Language spoken in source file, default 1537",
                         default=DEFAULT_LANGUAGE)
     parser.add_argument('-K', '--api-key',
                         help="The Baidu Cloud API key to be used.")
