@@ -19,8 +19,8 @@ from aip import AipSpeech
 
 from progressbar import ProgressBar, Percentage, Bar, ETA
 
-from autosub.constants import LANGUAGE_CODES
-from autosub.formatters import FORMATTERS
+from autosubb.constants import LANGUAGE_CODES
+from autosubb.formatters import FORMATTERS
 
 DEFAULT_SUBTITLE_FORMAT = 'srt'
 DEFAULT_CONCURRENCY = 1
