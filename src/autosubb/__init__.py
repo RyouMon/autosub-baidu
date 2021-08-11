@@ -163,7 +163,7 @@ def find_speech_regions(filename, frame_width=4096, min_region_size=0.5, max_reg
 def generate_subtitles(source_path,
                        output=None,
                        concurrency=DEFAULT_CONCURRENCY,
-                       subtitle_file_format=DEFAULT_SUBTITLE_FORMAT,
+                       subtitle_file_format=None,
                        app_id=None,
                        api_key=None,
                        secret_key=None,
@@ -206,6 +206,10 @@ def generate_subtitles(source_path,
             raise
 
     timed_subtitles = [(r, t) for r, t in zip(regions, transcripts) if t]
+
+    if not subtitle_file_format:
+        return timed_subtitles
+
     formatter = FORMATTERS.get(subtitle_file_format)
     formatted_subtitles = formatter(timed_subtitles)
 
@@ -220,7 +224,7 @@ def generate_subtitles(source_path,
 
     os.remove(audio_filename)
 
-    return dest
+    return formatted_subtitles
 
 
 def validate(args):

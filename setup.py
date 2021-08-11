@@ -8,7 +8,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="autosub-baidu",
-    version="0.1.0",
+    version="0.2.0",
     author="RyouMon",
     author_email="wenslife@outlook.com",
     description="Auto-generates subtitles for any video or audio file. (Using Baidu AIP)",
