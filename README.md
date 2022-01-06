@@ -96,6 +96,76 @@ if __name__ == '__main__':
  ((60.41600000000005, 63.48800000000005), '战胜对手，其实就是战胜对手的弱点。')]
 ```
 
+#### 从代码中生成SRT文件
+在`generate_subtitles`函数中指定`subtitle_file_format`参数：
+```py
+import sys
+
+from autosubb import generate_subtitles
+
+APP_ID = '2*****0'
+API_KEY = 'W********************o'
+SECRET_KEY = 'X******************************5'
+
+filename = 'audio.mp3'
+
+
+def main():
+    subtitles = generate_subtitles(
+        source_path=filename,
+        app_id=APP_ID,
+        api_key=API_KEY,
+        secret_key=SECRET_KEY,
+        concurrency=2,
+        dev_pid='80001',
+        subtitle_file_format='srt',
+    )
+
+    with open('audio.srt', 'wb') as out:
+        out.write(subtitles.encode('utf-8'))
+
+
+if __name__ == '__main__':
+    sys.exit(main())
+```
+
+如果你想拿到列表形式的字幕（做一些事情），并在稍后保存为SRT文件，
+你可以使用`srt_formatter`函数：
+```py
+import sys
+
+from autosubb import generate_subtitles
+from autosubb import formatters
+
+APP_ID = '2*****0'
+API_KEY = 'W********************o'
+SECRET_KEY = 'X******************************5'
+
+filename = 'audio.mp3'
+
+
+def main():
+    subtitles = generate_subtitles(
+        source_path=filename,
+        app_id=APP_ID,
+        api_key=API_KEY,
+        secret_key=SECRET_KEY,
+        concurrency=2,
+        dev_pid='80001',
+    )
+
+    print(subtitles)  # do something
+
+    with open('audio.srt', 'wb') as out:
+        content = formatters.srt_formatter(subtitles)
+        out.write(content.encode('utf-8'))
+
+
+if __name__ == '__main__':
+    sys.exit(main())
+```
+
+
 ### License
 
 MIT
