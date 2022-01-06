@@ -22,13 +22,14 @@ So I cloned the code of this project and replaced Google Web Speech API with Bai
 
 Now Autosub-baidu only supports Chinese.
 
-### Installation
+### 安装 Installation
 
-1. Install [ffmpeg](https://www.ffmpeg.org/).
-2. Run `pip install autosub-baidu`.
+1. 安装 [ffmpeg](https://www.ffmpeg.org/).
+2. 运行 `pip install autosub-baidu`.
 
-### Usage
+### 用法 Usage
 
+#### 从命令行使用（command line）：
 ```
 python -m autosubb -h
 usage: __main__.py [-h] [-C CONCURRENCY] [-o OUTPUT] [-F FORMAT] [-L LANG] [-K API_KEY] [-S SECRET_KEY] [-A APP_ID]
@@ -56,6 +57,39 @@ optional arguments:
                         The Baidu Cloud AppID to be used.
   --list-formats        List all available subtitle formats
   --list-languages      List all available source/destination languages
+```
+
+#### 从代码使用:
+```py
+import sys
+
+from autosubb import generate_subtitles
+
+APP_ID = '2*****0'
+API_KEY = 'W********************o'
+SECRET_KEY = 'X******************************5'
+
+filename = 'audio.mp3'
+
+
+def main():
+    subtitles = generate_subtitles(
+        source_path=filename, app_id=APP_ID, api_key=API_KEY, secret_key=SECRET_KEY, concurrency=2,
+        dev_pid='80001',
+    )
+    print(subtitles)
+
+
+if __name__ == '__main__':
+    sys.exit(main())
+```
+
+```py
+[((2.3040000000000003, 4.608000000000002), '从前有一对仙人夫妻。'),
+ ((5.376000000000003, 7.424000000000005), '他们常常到山顶上下棋。'),
+...
+ ((56.83200000000004, 59.392000000000046), '猴子的眼睛一直盯着这盘水蜜桃。'),
+ ((60.41600000000005, 63.48800000000005), '战胜对手，其实就是战胜对手的弱点。')]
 ```
 
 ### License
