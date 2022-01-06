@@ -74,7 +74,11 @@ filename = 'audio.mp3'
 
 def main():
     subtitles = generate_subtitles(
-        source_path=filename, app_id=APP_ID, api_key=API_KEY, secret_key=SECRET_KEY, concurrency=2,
+        source_path=filename,
+        app_id=APP_ID,
+        api_key=API_KEY,
+        secret_key=SECRET_KEY,
+        concurrency=2,
         dev_pid='80001',
     )
     print(subtitles)
